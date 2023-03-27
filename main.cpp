@@ -1,92 +1,129 @@
-//
-//  main.cpp
-//  Second assignment
-//  900222990
-//  Created by Mohamed Mansour on 05/03/2023.
-//
-#include <cmath>
+//Made by Mohamed Mansour 900222990 on 26/3/2023
+
 #include <iostream>
-#include "Header.h"
+#include <string>
+#include <fstream>
+#include "Customer.h"
+#include "Mechanic.h"
+#include "Person.h"
+#include "Mechanic.cpp"
+#include "Person.cpp"
+#include "Customer.cpp"
+#include "Queue.h"
+#include "Queue.cpp"
 
-// including important librarires
-using namespace std;        // using standard namespacing
+//including important libraries and files
+
+const int Size = 4;
+//declaring the size of the array
 
 
-point Center(point[], int);
-void closest(point[],point[],point,int);
-
-//prototypes of the functions used in the program
-
-int main()                  //defining the main function
+void sort(customer customers[])
 {
-    srand(time(NULL));
-    int m = 0, n = 0;
-
-
-    
-    cout << "size of clusters: ";
-        cin >> n ;
-    cout << "number of points to be tested: ";
-        cin >>m;
-    //taking the size of the clusters of the arrays from the user and the testing array
-    
-    
-    point *A = new point [n];
-    point *B = new point [n];
-    
-    point *arr = new point [m];
-    //declaring three dynamic 1 D arrays
-    
-    for(int i =0; i < n; i++){
-        A[i].setx(((rand() % 199) + 701) / 10.0);
-        A[i].sety(((rand() % 199) + 701) / 10.0);
-        B[i].setx(((rand() % 199) + 201) / 10.0);
-        B[i].sety(((rand() % 199) + 201) / 10.0);
+    for (int i = 0; i < 14; i++)
+    {
+        for (int j = i+1; j < 15; j++)
+        {
+            if(customers[i] > customers[j])
+                swap(customers[i],customers[j]);
+        }
         
-//defining the right range of the X's and Y's in both arrays of type point
-    }
-    for(int i =0; i < m; i++){
-        arr[i].setx(((rand() % 949) + 51) / 10.0);
-        arr[i].sety(((rand() % 949) + 51) / 10.0);
     }
     
-//defining the range for the X's and Y's in r array of type point
-    for(int i = 0; i < m; i++)
-    {
-        closest(A, B, arr[i], n);
-    }
-}
+ }
 
-point Center(point A[], int n)
+// function for sorting customers ascendingly in order of their appoinments
+
+string searchbyID(mechanic a[Size], int x )
 {
-    float sumX = 0,
-    sumY = 0,
-    avgX = 0,
-    avgY= 0;
-    
-    for(int i = 0 ;i < n; i++)
+    for (int i = 0; i < Size; i++)
     {
-        sumX += A[i].getx();
-        sumY += A[i].gety();
-        avgX = sumX / n;
-        avgY = sumY / n;
+        if (x == a[i].get_id())
+            return a[i].get_name();
     }
-    point h (avgX , avgY);
-    return h;
+    return 0;
 }
-void closest(point A[],point B[],point r, int n)
-{
-    // The following is a function that determines whether a point is closer to one cluster or the other.
-    float distanceA = sqrt(pow(Center(A, n).getx()-(r.getx()), 2)+pow(Center(A, n).gety()-(r.gety()), 2));
-    float distanceB =  sqrt(pow(Center(B, n).getx()-(r.getx()), 2)+pow(Center(B, n).gety()-(r.gety()), 2));
+// getting names of the mechanics by knowing their IDs
+
+int main (){
+ 
+    queue<customer> customerQ;
+    mechanic mechanics[Size] ;//assuming only 4 mechanics
+    customer customers [15]; // assuming only 15 customers
+    ifstream x,y;
+    x.open("Mechanic.txt");
+    y.open("Customer.txt");
+ 
+    //opening the input text files
     
+    string Name = "";
+    int Age, ID;
+ 
+    int i = 0;
     
-        if (distanceB < distanceA)
-            // if distance to center of A is shorter, then it is closer to A.
-            cout << "point (" << r.getx() << ", " << r.gety() <<") is closer to the cluster B"<< endl;
-        else
-            // if distance to center of A is shorter, then it is closer to A.
-            cout << "point (" << r.getx() << ", " << r.gety() <<") is closer to the cluster A" << endl;
+    while (!x.eof())
+    {// we add information to the mechanics
+        x >> Name >> Age >> ID;
+        mechanics[i].set_name(Name);
+        mechanics[i].set_age(Age);
+        mechanics[i].set_id(ID);
+        i++;
+}
+    //setters for attributes in the array
+int hours, mins, c = 0;
+    
+//declaring important variables
+appointment appoint;
+while (!y.eof())
+{// we read information of the customers from the file
+    appointment nu;
+    nu.hours = 0;
+    nu.mins = 0;
+    y >> Name >> Age >> hours >> mins;
+    appoint.hours = hours;
+    appoint.mins = mins;
+    customers[c].set_name(Name);
+    customers[c].set_age(Age);
+    int cur = 0;
+    for (int l = c%4; l < Size; l++){
+        if (mechanics[l].isavailable(appoint))// if the appointment is avilabe then set appointment to the customer and the mechanic
+        {
+            customers[c].setappointment(appoint);
+            mechanics[l].setappointments(appoint);
+            customers[c].print();
+            mechanics[l].print();
+            customers[c].setMechanicID(mechanics[l].get_id());// we get the id of the mechanic that was assigned to this customer
+ 
+      cout<<appoint.hours<<":"<<appoint.mins;
+        cur++;
+        l = Size;
+      
+ 
+        }
     }
+    if (cur==0){// if no appointment was avilable then we print that appointment was cancelled and set the id mechanic id of those customers to be 0
+        cout << "\n"<<" Appointment for "<< customers[c].get_name() << " was cancelled."; customers[c].setMechanicID(0);customers[c].setappointment(nu);
 
+    }
+    c++;
+}
+ 
 
+cout<<"\n"<<"After sorting the output is "<<"\n";
+sort(customers);//we sort the customers in the array
+ for (int j = 0; j < 15; j++)
+        {
+            customerQ.push(customers[j]);// we push the sorted customers iinto the queue
+        }
+        for (int j =0; j<15; j++){
+            customerQ.peek();
+            
+if(customerQ.peek().getMechanicID()==0){customerQ.peek().print();cout<<"no one";}
+    else{customerQ.peek().print();cout << searchbyID(mechanics, customerQ.peek().getMechanicID())<<" "<<customerQ.peek().getappointment().hours<<":"<<customerQ.peek().getappointment().mins;}
+    customerQ.pop();
+    cout << endl << endl;
+}
+x.close();
+y.close();
+    return 0;
+}
